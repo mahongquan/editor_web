@@ -55,7 +55,6 @@ li:last-child
 class HtmlEditor extends Component {
   cssChange = newv => {
     this.setState({ css: newv });
-    this.preview();
   };
   htmlChange = newv => {
     this.setState({ html: newv });
@@ -68,7 +67,6 @@ class HtmlEditor extends Component {
     this.state = {
       css: css,
       html: html,
-      csshtml: '',
       size: (window.innerHeight-toolbar_h) / 2,
       edit_width: window.innerWidth / 2,
     };
@@ -88,7 +86,7 @@ class HtmlEditor extends Component {
   open_click = () => {
     if (electron) {
     }
-  };
+ };
   save_click = () => {
     if (electron) {
     }
