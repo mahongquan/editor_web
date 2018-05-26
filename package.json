@@ -1,0 +1,36 @@
+{
+  "name": "htmleditor",
+  "version": "0.0.1",
+  "homepage": ".",
+  "description": "html editor",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --dev",
+    "local": "electron . --local",
+    "electron": "electron . ",
+    "dev": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "repository": "https://github.com/electron/electron-quick-start",
+  "keywords": [
+    "Electron",
+    "quick",
+    "start",
+    "tutorial",
+    "demo"
+  ],
+  "author": "GitHub",
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "brace": "^0.11.1",
+    "electron": "~1.8.4",
+    "prettier": "1.12.1",
+    "react": "^16.3.2",
+    "react-ace": "^5.10.0",
+    "react-dom": "^16.3.2",
+    "react-scripts": "^1.1.4"
+  },
+  "dependencies": {
+    "react-split-pane": "^0.1.77"
+  }
+}
