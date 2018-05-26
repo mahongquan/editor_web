@@ -9,6 +9,7 @@ if (window.require) {
   electron = window.require('electron');
 }
 const fontSize = 16;
+const toolbar_h=80;
 const html = `<ul>
     <li>i'm list 1</li>
     <li>i'm list 2</li>
@@ -52,32 +53,31 @@ li:last-child
     height:200px;
 }`;
 class HtmlEditor extends Component {
-  state = {
-    css: css,
-    html: html,
-    size: 250,
-  };
   cssChange = newv => {
     this.setState({ css: newv });
     this.preview();
   };
   htmlChange = newv => {
     this.setState({ html: newv });
-    this.preview();
   };
-  preview = () => {
-    this.divPreview.innerHTML = `<style>${this.state.css}</style>${
-      this.state.html
-    }`;
-  };
+  // preview = () => {
+  //   this.setState({csshtml: `<style>${this.state.css}</style>${this.state.html}`});
+  // };
   constructor() {
     super();
+    this.state = {
+      css: css,
+      html: html,
+      csshtml: '',
+      size: (window.innerHeight-toolbar_h) / 2,
+      edit_width: window.innerWidth / 2,
+    };
     this.cssEditor = React.createRef();
     this.htmlEditor = React.createRef();
   }
   componentDidMount() {
-    this.divPreview = document.getElementById('preview');
-    this.preview();
+    // this.divPreview = document.getElementById('preview');
+    // this.preview();
   }
   componentWillUnmount() {}
   handleDragStart = () => {
@@ -108,80 +108,104 @@ class HtmlEditor extends Component {
   render() {
     // console.log(this.state);
     return (
-      <div
-        id="contain"
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <div style={{ height: '80px' }}>
-          <button onClick={this.open_click}>open</button>
-          <button onClick={this.save_click}>save</button>
-        </div>
-        <div
-          style={{
-            flex: 1,
-            width: '100%',
-            height: '100%',
+      <div id="root_new">
+        <SplitPane
+          size={this.state.edit_width}
+          onChange={width => {
+            this.setState({ edit_width: width });
           }}
         >
-          <SplitPane
-            style={{ flex: 1 }}
-            split="horizontal"
-            size={this.state.size}
-            onChange={this.handleDrag}
-            onDragStarted={this.handleDragStart}
-            onDragFinished={this.handleDragEnd}
-            pane2Style={{ overflow: 'auto' }}
-          >
-            <div style={{ width: '100%', height: '100%' }}>
-              <AceEditor
-                ref={this.htmlEditor}
-                fontSize={fontSize}
-                style={{
-                  margin: 'auto',
-                  width: '100%',
-                  height: '100%',
-                }}
-                mode="html"
-                theme="tomorrow_night"
-                value={this.state.html}
-                onChange={this.htmlChange}
-                name="htmlEd"
-                editorProps={{ $blockScrolling: true }}
-              />
+          <div id="contain_edit">
+            <div style={{ height: toolbar_h}}>
+              <button onClick={this.open_click}>open</button>
+              <button onClick={this.save_click}>save</button>
             </div>
+            <div
+              style={{
+                flex: 1,
+                width: '100%',
+                height: '100%',
+              }}
+            >
+              <SplitPane
+                style={{ flex: 1 }}
+                split="horizontal"
+                size={this.state.size}
+                onChange={this.handleDrag}
+                onDragStarted={this.handleDragStart}
+                onDragFinished={this.handleDragEnd}
+                pane2Style={{ overflow: 'auto' }}
+              >
+                <div style={{ width: '100%', height: '100%' }}>
+                  <AceEditor
+                    ref={this.htmlEditor}
+                    fontSize={fontSize}
+                    style={{
+                      margin: 'auto',
+                      width: '100%',
+                      height: '100%',
+                    }}
+                    mode="html"
+                    theme="tomorrow_night"
+                    value={this.state.html}
+                    onChange={this.htmlChange}
+                    name="htmlEd"
+                    editorProps={{ $blockScrolling: true }}
+                  />
+                </div>
 
-            <div style={{ width: '100%', height: '100%' }}>
-              <AceEditor
-                ref={this.cssEditor}
-                fontSize={fontSize}
-                style={{
-                  margin: 'auto',
-                  width: '100%',
-                  height: '100%',
-                }}
-                mode="css"
-                theme="tomorrow_night"
-                value={this.state.css}
-                onChange={this.cssChange}
-                name="UNIQUE_ID_OF_DIV"
-                editorProps={{ $blockScrolling: true }}
-              />
+                <div style={{ width: '100%', height: '100%' }}>
+                  <AceEditor
+                    ref={this.cssEditor}
+                    fontSize={fontSize}
+                    style={{
+                      margin: 'auto',
+                      width: '100%',
+                      height: '100%',
+                    }}
+                    mode="css"
+                    theme="tomorrow_night"
+                    value={this.state.css}
+                    onChange={this.cssChange}
+                    name="UNIQUE_ID_OF_DIV"
+                    editorProps={{ $blockScrolling: true }}
+                  />
+                </div>
+              </SplitPane>
             </div>
-          </SplitPane>
-        </div>
+          </div>
+          <div
+            id="contain_preview"
+            dangerouslySetInnerHTML={{
+              __html: `<style>${this.state.css}</style>${this.state.html}`,
+            }}
+          />
+        </SplitPane>
         <style jsx="true">{`
+          body {
+            margin: 0 0 0 0;
+            padding: 0 0 0 0;
+          }
+          #root_new {
+            margin: 0 0 0 0;
+            padding: 0 0 0 0;
+            width: 100vw;
+            height: 100vh;
+          }
+          #contain_edit {
+            height: 100%;
+            background-color: #ddd;
+            display:flex;
+            overflow:hidden;
+            flex-direction:column;
+          }
+          #contain_preview {
+            height: 100%;
+            background-color: #eee;
+            overflow: auto;
+          }
           .SplitPane {
             position: relative !important;
-          }
-          #contain {
-            width: 100%;
-            height: 100%;
-            background-color: '#0f0';
           }
           .Resizer {
             background: #000;
