@@ -31,8 +31,8 @@ const css = `ul {
     align-items: baseline;
     justify-content: center;
     align-content:center;
-    height:100%;
-    width:100%;
+    height:200;
+    width:200;
 }
 li {
     background-color: #8cacea;
@@ -67,8 +67,8 @@ class HtmlEditor extends Component {
     this.state = {
       css: css,
       html: html,
-      size: (window.innerHeight-toolbar_h) / 2,
-      edit_width: window.innerWidth / 2,
+      html_editor_h: 200,
+      edit_width: 800,
     };
     this.cssEditor = React.createRef();
     this.htmlEditor = React.createRef();
@@ -101,7 +101,7 @@ class HtmlEditor extends Component {
   };
 
   handleDrag = width => {
-    this.setState({ size: width });
+    this.setState({ html_editor_h: width });
   };
   render() {
     // console.log(this.state);
@@ -128,7 +128,7 @@ class HtmlEditor extends Component {
               <SplitPane
                 style={{ flex: 1 }}
                 split="horizontal"
-                size={this.state.size}
+                size={this.state.html_editor_h}
                 onChange={this.handleDrag}
                 onDragStarted={this.handleDragStart}
                 onDragFinished={this.handleDragEnd}
@@ -187,19 +187,20 @@ class HtmlEditor extends Component {
           #root_new {
             margin: 0 0 0 0;
             padding: 0 0 0 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
           }
           #contain_edit {
             height: 100%;
             background-color: #ddd;
             display:flex;
-            overflow:hidden;
             flex-direction:column;
           }
           #contain_preview {
+            margin:10 10 10 10;
+            padding：15 15 15 15;
             height: 100%;
-            background-color: #eee;
+            background-color: #efe;
             overflow: auto;
           }
           .SplitPane {
