@@ -4,6 +4,7 @@ import AceEditor from 'react-ace';
 import 'brace/mode/css';
 import 'brace/mode/html';
 import 'brace/theme/tomorrow_night';
+import Frame from 'react-frame-component';
 let electron;
 if (window.require) {
   electron = window.require('electron');
@@ -67,6 +68,7 @@ class HtmlEditor extends Component {
     this.state = {
       css: css,
       html: html,
+      showPreview:"block",
       html_editor_h: 200,
       edit_width: 800,
     };
@@ -85,10 +87,52 @@ class HtmlEditor extends Component {
   };
   open_click = () => {
     if (electron) {
+      var path=require("path");
+      var fs=require("fs");
+      var app = require('electron').remote; 
+      var dialog = app.dialog;
+      dialog.showOpenDialog({
+          defaultPath :path.resolve("./css_examples"),
+          properties: [
+              'openFile',
+          ],
+          filters: [
+              { name: '*.html', extensions: ['html'] },
+          ]
+      },(res)=>{
+          // fs.writeFileSync(res, `<html><body><style>${this.state.css}</style>${this.state.html}</body></html>`);
+          // console.log(res[0]);
+          const cheerio = require('cheerio');
+          let content=fs.readFileSync(res[0], {encoding:"utf-8",flag:"r"});
+          let $ = cheerio.load(content,{
+             xmlMode: true,
+             lowerCaseTags: false
+          });
+          this.setState({css:$("body style").text()});
+          $("body style").remove();
+          // console.log(body);
+          this.setState({html:$("body").html(),showPreview:"block"});
+
+      })
     }
  };
   save_click = () => {
     if (electron) {
+      var path=require("path");
+      var fs=require("fs");
+      var app = require('electron').remote; 
+      var dialog = app.dialog;
+      dialog.showSaveDialog({
+          defaultPath :path.resolve("./css_examples"),
+          properties: [
+              'saveFile',
+          ],
+          filters: [
+              { name: '*.html', extensions: ['html'] },
+          ]
+      },(res)=>{
+          fs.writeFileSync(res, `<html><body><style>${this.state.css}</style>${this.state.html}</body></html>`);
+      })
     }
   };
   handleDragEnd = () => {
@@ -107,12 +151,6 @@ class HtmlEditor extends Component {
     // console.log(this.state);
     return (
       <div id="root_new">
-        <SplitPane
-          size={this.state.edit_width}
-          onChange={width => {
-            this.setState({ edit_width: width });
-          }}
-        >
           <div id="contain_edit">
             <div style={{ height: toolbar_h}}>
               <button onClick={this.open_click}>open</button>
@@ -122,7 +160,7 @@ class HtmlEditor extends Component {
               style={{
                 flex: 1,
                 width: '100%',
-                height: '100%',
+                height: `calc(100vh - ${toolbar_h})`,
               }}
             >
               <SplitPane
@@ -138,10 +176,12 @@ class HtmlEditor extends Component {
                   <AceEditor
                     ref={this.htmlEditor}
                     fontSize={fontSize}
+                    showPrintMargin={false}
                     style={{
                       margin: 'auto',
                       width: '100%',
                       height: '100%',
+                      backgroundColor:'#888',
                     }}
                     mode="html"
                     theme="tomorrow_night"
@@ -160,7 +200,9 @@ class HtmlEditor extends Component {
                       margin: 'auto',
                       width: '100%',
                       height: '100%',
+                      backgroundColor:'#888',
                     }}
+                    showPrintMargin={false}
                     mode="css"
                     theme="tomorrow_night"
                     value={this.state.css}
@@ -172,13 +214,22 @@ class HtmlEditor extends Component {
               </SplitPane>
             </div>
           </div>
-          <div
-            id="contain_preview"
-            dangerouslySetInnerHTML={{
-              __html: `<style>${this.state.css}</style>${this.state.html}`,
-            }}
-          />
-        </SplitPane>
+          <div id="contain_preview">
+           <button onClick={()=>{
+              if(this.state.showPreview==="none"){
+                this.setState({showPreview:"block"});
+              }
+              else{
+                this.setState({showPreview:"none"}); 
+              }
+           }}>toggle preview</button>
+           <Frame style={{width:'50vw',height:"50vh",display:this.state.showPreview}}> 
+            <div style={{backgroundColor:"#666"}}
+              dangerouslySetInnerHTML={{
+                __html: `<style>${this.state.css}</style>${this.state.html}`,
+              }}/>
+            </Frame>
+          </div>
         <style jsx="true">{`
           body {
             margin: 0 0 0 0;
@@ -191,17 +242,22 @@ class HtmlEditor extends Component {
             height: 100%;
           }
           #contain_edit {
-            height: 100%;
-            background-color: #ddd;
+            height: 100vh;
+            background-color: #666;
             display:flex;
             flex-direction:column;
           }
           #contain_preview {
+            position:fixed;
+            display:flex;
+            flex-direction:column;
+            right:0;
+            top:0;
             margin:10 10 10 10;
             padding：15 15 15 15;
-            height: 100%;
             background-color: #efe;
             overflow: auto;
+            z-index:100;
           }
           .SplitPane {
             position: relative !important;
