@@ -3,13 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link  rel="stylesheet" href="./animate.min.css">
 </head>
 <body>
 <div id="root">root</div>
 <script>
-  require('babel-register');
-  require('babel-polyfill');
-  require('./index.js');
+  window.require('babel-register');
+  window.require('babel-polyfill');
+  window.require('./index.js');
 </script>
 </body>
 </html>
