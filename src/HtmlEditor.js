@@ -6,13 +6,42 @@ import 'brace/mode/html';
 import 'brace/theme/tomorrow_night';
 import Frame from 'react-frame-component';
 import Todos from './todos';
-let electron;
-if (window.require) {
-  electron = window.require('electron');
-}
+const path=require("path");
+const electron = window.require('electron');
+const { ipcRenderer } =require("electron");//
 const fontSize = 16;
-const toolbar_h=80;
-const html = `<ul>
+const toolbar_h=70;
+const html = `<html><head></head><body><style>ul {
+    display:flex;
+    padding: 0;
+    margin:0 0 0 0;
+    list-style: none;
+    flex-wrap:wrap;
+    background-color: #777;
+    align-items: baseline;
+    justify-content: center;
+    align-content:center;
+    height:200;
+    width:200;
+}
+li {
+    background-color: #8cacea;
+    margin: 8px;
+    width:100px;
+    overflow:hidden;
+}
+li:first-child
+{ 
+    line-height:1em;
+    font-size:3em;
+    height:100px;
+}
+li:last-child
+{ 
+    line-height:1em;
+    font-size:2em;
+    height:200px;
+}</style><ul>
     <li>i'm list 1</li>
     <li>i'm list 2</li>
     <li>i'm list 3</li>
@@ -22,7 +51,7 @@ const html = `<ul>
     <li>i'm list 1</li>
     <li>i'm list 2</li>
     <li>i'm list 3</li>
-</ul>`;
+</ul></body></html>`;
 const css = `ul {
     display:flex;
     padding: 0;
@@ -59,19 +88,25 @@ class HtmlEditor extends Component {
     this.setState({ css: newv });
   };
   htmlChange = newv => {
-    this.setState({ html: newv });
+    this.setState({ html: newv },()=>{
+      this.updateFrame();
+    });
   };
   // preview = () => {
   //   this.setState({csshtml: `<style>${this.state.css}</style>${this.state.html}`});
   // };
   constructor() {
     super();
+    ipcRenderer.on("save", ()=>{
+      this.save_click();
+    });
     this.state = {
       previewSize:{width:'50vw',height:"50vh"},
       css: css,
+      // head:`<meta charset="utf-8"/>`,
       html: html,
       showPreview:"flex",
-      html_editor_h: 200,
+      html_editor_h: 600,
       edit_width: 800,
       filename:"",
       selectValue:"",
@@ -82,6 +117,8 @@ class HtmlEditor extends Component {
   componentDidMount() {
     // this.divPreview = document.getElementById('preview');
     // this.preview();
+    // setTimeout(this.updateFrame,2000);
+    this.updateFrame();
   }
   componentWillUnmount() {}
   handleDragStart = () => {
@@ -105,17 +142,18 @@ class HtmlEditor extends Component {
           ]
       },(res)=>{
           if(!res) return;
-          const cheerio = require('cheerio');
+          // const cheerio = require('cheerio');
           this.setState({filename:res[0]});
           let content=fs.readFileSync(res[0], {encoding:"utf-8",flag:"r"});
-          let $ = cheerio.load(content,{
-             xmlMode: true,
-             lowerCaseTags: false
-          });
-          this.setState({css:$("body style").text()});
-          $("body style").remove();
-          this.setState({html:$("body").html(),showPreview:"flex"});
-
+          // let $ = cheerio.load(content,{
+          //    xmlMode: true,
+          //    lowerCaseTags: false
+          // });
+          // this.setState({css:$("body style").text()});
+          // this.setState({head:$("head").html()});
+          // $("body style").remove();
+          // this.setState({html:$("body").html(),showPreview:"flex"});
+          this.setState({html: content,showPreview:"flex"});
       })
     }
  };
@@ -134,7 +172,32 @@ class HtmlEditor extends Component {
   }
   return 
 }
- anim=()=>{
+updateFrame=()=>{
+    let frame=window.frames["preview"];
+    if(frame){
+      let filepath=path.dirname(this.state.filename);
+        // let $ = cheerio.load(this.state.html,{
+        //    xmlMode: true,
+        //    lowerCaseTags: false
+        // });
+        // $("head").prepend(`<base href="${filepath}/" />`);
+      let content=this.state.html;
+      content=content.replace("<head>",`<head><base href="${filepath}/" />`)
+      let doc=window.frames["preview"].document;
+      if(!doc) return;
+      try{
+        doc.open();
+        doc.write(content);
+        doc.close();
+      }
+      catch(err){
+        console.log(err);
+        // this.setState({filename:"about:blank"});
+      }
+    }
+
+}
+anim=()=>{
     //console.log(e.target.value);
     this.setState({
       selectValue: 'bounce animated',
@@ -170,7 +233,7 @@ save_as_click = () => {
           if(res){
             this.anim();
             this.setState({filename:res});
-            fs.writeFileSync(res, `<html><body><style>${this.state.css}</style>${this.state.html}</body></html>`);
+            fs.writeFileSync(res, this.genOut());
           }
       })
     }
@@ -181,13 +244,22 @@ save_as_click = () => {
       if(this.state.filename!=""){
           this.anim();
           var fs=window.require("fs");
-          fs.writeFileSync(this.state.filename, `<html><body><style>${this.state.css}</style>${this.state.html}</body></html>`);        
+          fs.writeFileSync(this.state.filename, this.genOut());        
       }
       else{
         this.save_as_click();
       }
     }
   };
+  genOut=()=>{
+    return this.state.html;
+    // `<html><body><style>${this.state.css}</style>${this.state.html}</body></html>`
+    // let $ = cheerio.load(this.state.html,{
+    //          xmlMode: true,
+    //          lowerCaseTags: false
+    //       });
+    // let html=$("body").append(`<style>this.state.css</style`)
+  }
   handleDragEnd = () => {
     // console.log(this.cssEditor.current);
     this.cssEditor.current.editor.resize();
@@ -200,12 +272,25 @@ save_as_click = () => {
   handleDrag = width => {
     this.setState({ html_editor_h: width });
   };
+  resetPreview=()=>{
+    let filename=this.state.filename;
+    this.setState({filename:"about:blank"},()=>{
+      this.setState({filename:filename});
+    });
+  }
   render() {
-    // console.log(this.state);
+    console.log(this.state);
+    // let $ = cheerio.load(this.state.html,{
+    //          xmlMode: true,
+    //          lowerCaseTags: false
+    //       });
+    let html=this.state.html;//$("body").html();
+    // let head=(<meta charSet="utf-8"></meta>);
+    // this.updateFrame();
     return (
       <div id="root_new">
           <div id="contain_edit">
-            <div style={{ height: toolbar_h}}>
+            <div style={{ height: toolbar_h,backgroundColor:"#ccc"}}>
               <button style={{margin:"10px 10px 10px 10px"}} 
                 onClick={this.open_click}>open
               </button>
@@ -219,6 +304,7 @@ save_as_click = () => {
                   save as
               </button>
             </span>
+              <button onClick={this.resetPreview}>preview</button>
               <button onClick={this.anim}>anim</button>
               <div>{this.state.filename}</div>
             </div>
@@ -229,17 +315,7 @@ save_as_click = () => {
                 height: `calc(100vh - ${toolbar_h})`,
               }}
             >
-              <SplitPane
-                style={{ flex: 1 }}
-                split="horizontal"
-                size={this.state.html_editor_h}
-                onChange={this.handleDrag}
-                onDragStarted={this.handleDragStart}
-                onDragFinished={this.handleDragEnd}
-                pane2Style={{ overflow: 'auto' }}
-              >
-                <div style={{ width: '100%', height: '100%' }}>
-                  <AceEditor
+                 <AceEditor
                     ref={this.htmlEditor}
                     fontSize={fontSize}
                     showPrintMargin={false}
@@ -248,7 +324,6 @@ save_as_click = () => {
                       margin: 'auto',
                       width: '100%',
                       height: '100%',
-                      backgroundColor:'#888',
                     }}
                     mode="html"
                     theme="tomorrow_night"
@@ -257,29 +332,6 @@ save_as_click = () => {
                     name="htmlEd"
                     editorProps={{ $blockScrolling: Infinity }}
                   />
-                </div>
-
-                <div style={{ width: '100%', height: '100%' }}>
-                  <AceEditor
-                    ref={this.cssEditor}
-                    fontSize={fontSize}
-                    style={{
-                      margin: 'auto',
-                      width: '100%',
-                      height: '100%',
-                      backgroundColor:'#888',
-                    }}
-                    wrapEnabled={true}
-                    showPrintMargin={false}
-                    mode="css"
-                    theme="tomorrow_night"
-                    value={this.state.css}
-                    onChange={this.cssChange}
-                    name="UNIQUE_ID_OF_DIV"
-                    editorProps={{ $blockScrolling: Infinity }}
-                  />
-                </div>
-              </SplitPane>
             </div>
           </div>
           <div id="contain_preview">
@@ -302,12 +354,15 @@ save_as_click = () => {
                   this.setState({previewSize:{width:"50vw",height:"50vh"} });
                 }
              }}>toggle max</button>
-           <Frame style={{width:"100%",height:"100%"}}> 
-             <div dangerouslySetInnerHTML={{
-                __html: `<style>${this.state.css}</style>${this.state.html}`,
-              }}>
-             </div>
-            </Frame>
+             <iframe name="preview" src={this.state.filename} style={{width:"100%",height:"100%"}}></iframe>
+             {
+           // <Frame style={{width:"100%",height:"100%"}} head={head}> 
+           //   <div dangerouslySetInnerHTML={{
+           //      __html: `${html}`,
+           //    }}>
+           //   </div>
+           //  </Frame>
+          }
            </div>
           </div>
         <style jsx="true">{`
@@ -323,11 +378,11 @@ save_as_click = () => {
           }
           #contain_edit {
             height: 100vh;
-            background-color: #666;
             display:flex;
             flex-direction:column;
           }
           #contain_preview {
+            background-color:#eee;
             position:fixed;
             display:flex;
             flex-direction:column;
@@ -335,7 +390,6 @@ save_as_click = () => {
             top:0;
             margin:0 0 0 0;
             padding：0 0 0 0;
-            background-color: #efe;
             overflow: auto;
             z-index:100;
           }

@@ -60,6 +60,14 @@ const createWindow = () => {
           },
         },
         {
+          label: 'SAVE',
+          accelerator: 'Ctrl+S',
+          click: (item, win) =>{
+            win.webContents.send("save");
+          },
+        },
+
+        {
           label: 'DevTools',
           accelerator: 'Ctrl+D',
           click: (item, win) =>{
