@@ -6,52 +6,27 @@ import 'brace/mode/html';
 import 'brace/theme/tomorrow_night';
 import Frame from 'react-frame-component';
 import Todos from './todos';
-const path=require("path");
+import Browser from './Browser';
+const path=window.require("path");
+const fs=window.require("fs");
 const electron = window.require('electron');
-const { ipcRenderer } =require("electron");//
+const { ipcRenderer } =window.require("electron");//
+
 const fontSize = 16;
 const toolbar_h=70;
-const html = `<html><head></head><body><style>ul {
-    display:flex;
-    padding: 0;
-    margin:0 0 0 0;
-    list-style: none;
-    flex-wrap:wrap;
-    background-color: #777;
-    align-items: baseline;
-    justify-content: center;
-    align-content:center;
-    height:200;
-    width:200;
-}
-li {
-    background-color: #8cacea;
-    margin: 8px;
-    width:100px;
-    overflow:hidden;
-}
-li:first-child
-{ 
-    line-height:1em;
-    font-size:3em;
-    height:100px;
-}
-li:last-child
-{ 
-    line-height:1em;
-    font-size:2em;
-    height:200px;
-}</style><ul>
-    <li>i'm list 1</li>
-    <li>i'm list 2</li>
-    <li>i'm list 3</li>
-    <li>i'm list 1</li>
-    <li>i'm list 2</li>
-    <li>i'm list 3</li>
-    <li>i'm list 1</li>
-    <li>i'm list 2</li>
-    <li>i'm list 3</li>
-</ul></body></html>`;
+const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+
+</style>
+</head>
+<body>
+
+</body>
+</html>`;
 const css = `ul {
     display:flex;
     padding: 0;
@@ -89,7 +64,7 @@ class HtmlEditor extends Component {
   };
   htmlChange = newv => {
     this.setState({ html: newv },()=>{
-      this.updateFrame();
+      // this.updateFrame();
     });
   };
   // preview = () => {
@@ -118,7 +93,7 @@ class HtmlEditor extends Component {
     // this.divPreview = document.getElementById('preview');
     // this.preview();
     // setTimeout(this.updateFrame,2000);
-    this.updateFrame();
+    // this.updateFrame();
   }
   componentWillUnmount() {}
   handleDragStart = () => {
@@ -126,10 +101,14 @@ class HtmlEditor extends Component {
       dragging: true,
     });
   };
+  onFileClick=(filepath)=>{
+      filepath=path.resolve(filepath);
+          this.setState({filename:filepath});
+          let content=fs.readFileSync(filepath, {encoding:"utf-8",flag:"r"});
+          this.setState({html: content,showPreview:"flex"});
+  }
   open_click = () => {
     if (electron) {
-      var path=require("path");
-      var fs=require("fs");
       var app = require('electron').remote; 
       var dialog = app.dialog;
       dialog.showOpenDialog({
@@ -268,7 +247,9 @@ save_as_click = () => {
       dragging: false,
     });
   };
-
+  newfile=()=>{
+    this.setState({filename:"",html:"<!DOCTYPE html><html><head>\n\n<style>\n\n</style></head><body>\n\n</body></html>"});
+  }
   handleDrag = width => {
     this.setState({ html_editor_h: width });
   };
@@ -279,7 +260,7 @@ save_as_click = () => {
     });
   }
   render() {
-    console.log(this.state);
+    // console.log(this.state);
     // let $ = cheerio.load(this.state.html,{
     //          xmlMode: true,
     //          lowerCaseTags: false
@@ -287,8 +268,13 @@ save_as_click = () => {
     let html=this.state.html;//$("body").html();
     // let head=(<meta charSet="utf-8"></meta>);
     // this.updateFrame();
+    let filepath=path.dirname(this.state.filename);
+    let content=this.state.html;
+    content=content.replace("<head>",`<head><base href="${this.state.filename}" >`)
     return (
       <div id="root_new">
+          <Browser onFileClick={this.onFileClick} />
+
           <div id="contain_edit">
             <div style={{ height: toolbar_h,backgroundColor:"#ccc"}}>
               <button style={{margin:"10px 10px 10px 10px"}} 
@@ -304,7 +290,7 @@ save_as_click = () => {
                   save as
               </button>
             </span>
-              <button onClick={this.resetPreview}>preview</button>
+              <button onClick={this.newfile}  style={{margin:"10px 10px 10px 10px"}}>New</button>
               <button onClick={this.anim}>anim</button>
               <div>{this.state.filename}</div>
             </div>
@@ -354,7 +340,7 @@ save_as_click = () => {
                   this.setState({previewSize:{width:"50vw",height:"50vh"} });
                 }
              }}>toggle max</button>
-             <iframe name="preview" src={this.state.filename} style={{width:"100%",height:"100%"}}></iframe>
+             <iframe name="preview" srcDoc={content} style={{width:"100%",height:"100%"}}></iframe>
              {
            // <Frame style={{width:"100%",height:"100%"}} head={head}> 
            //   <div dangerouslySetInnerHTML={{

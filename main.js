@@ -23,7 +23,9 @@ let safeExit = false;
 
 let mainWindow;
 
-
+ipcMain.on('getpath', (event, arg) => {
+    event.returnValue = process.argv[1];
+})
 
 const createWindow = () => {
   console.log("createWindow");
