@@ -1,17 +1,16 @@
 import React, { Component } from 'react';
-import SplitPane from 'react-split-pane';
+// import SplitPane from 'react-split-pane';
 import AceEditor from 'react-ace';
-import 'brace/mode/css';
 import 'brace/mode/html';
 import 'brace/theme/tomorrow_night';
-import Frame from 'react-frame-component';
-import Todos from './todos';
-import Browser from './Browser';
+// import Frame from 'react-frame-component';
+// import Todos from './todos';
+import Browser from './Browser2';
+
 const path=window.require("path");
 const fs=window.require("fs");
 const electron = window.require('electron');
 const { ipcRenderer } =window.require("electron");//
-
 const fontSize = 16;
 const toolbar_h=70;
 const html = `<!DOCTYPE html>
@@ -108,9 +107,7 @@ class HtmlEditor extends Component {
           this.setState({html: content,showPreview:"flex"});
   }
   open_click = () => {
-    if (electron) {
-      var app = require('electron').remote; 
-      var dialog = app.dialog;
+      var dialog = electron.remote.dialog;
       dialog.showOpenDialog({
           defaultPath :path.resolve("./css_examples"),
           properties: [
@@ -134,7 +131,6 @@ class HtmlEditor extends Component {
           // this.setState({html:$("body").html(),showPreview:"flex"});
           this.setState({html: content,showPreview:"flex"});
       })
-    }
  };
  animationEnd = (el)=> {
   var animations = {
@@ -179,7 +175,7 @@ updateFrame=()=>{
 anim=()=>{
     //console.log(e.target.value);
     this.setState({
-      selectValue: 'bounce animated',
+      selectValue: 'flipInX animated',
     },()=>{
       setTimeout(this.check,1000);
     });
@@ -195,11 +191,7 @@ check=()=>{
 }
 
 save_as_click = () => {
-   if (electron) {
-      var fs=require("fs");
-      var path=require("path");
-      var app = require('electron').remote; 
-      var dialog = app.dialog;
+      var dialog = electron.remote.dialog;
       dialog.showSaveDialog({
           defaultPath :path.resolve("./css_examples"),
           properties: [
@@ -215,20 +207,15 @@ save_as_click = () => {
             fs.writeFileSync(res, this.genOut());
           }
       })
-    }
-
 }
   save_click = () => {
-    if (electron) {
       if(this.state.filename!=""){
           this.anim();
-          var fs=window.require("fs");
           fs.writeFileSync(this.state.filename, this.genOut());        
       }
       else{
         this.save_as_click();
       }
-    }
   };
   genOut=()=>{
     return this.state.html;
@@ -359,11 +346,14 @@ save_as_click = () => {
           #root_new {
             margin: 0 0 0 0;
             padding: 0 0 0 0;
+            display:flex;
+            flex-direction:row;
             width: 100%;
             height: 100%;
           }
           #contain_edit {
             height: 100vh;
+            flex:1;
             display:flex;
             flex-direction:column;
           }
