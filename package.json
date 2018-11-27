@@ -23,14 +23,24 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "brace": "^0.11.1",
-    "electron": "~1.8.4",
     "prettier": "1.12.1",
     "react": "^16.3.2",
     "react-ace": "^5.10.0",
     "react-dom": "^16.3.2",
-    "react-scripts": "^1.1.4"
+    "react-scripts": "^2.1.1"
   },
   "dependencies": {
-    "react-split-pane": "^0.1.77"
-  }
+    "bootstrap": "3.3.7",
+    "react-bootstrap": "^0.32.4",
+    "react-split-pane": "^0.1.77",
+    "socket.io": "^2.1.1",
+    "socket.io-client": "^2.1.1",
+    "socket.io-stream": "^0.9.1"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }
