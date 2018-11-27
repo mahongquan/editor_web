@@ -5,12 +5,12 @@ import Frame from 'react-frame-component';
 var styles = {
   border: '1px solid',
   width: '100%',
-  height: '100%'
+  height: '100%',
 };
 
 const Header = ({ children }) => <h1>{children}</h1>;
 
-const Content = ({ children }) => <section>{children}</section>
+const Content = ({ children }) => <section>{children}</section>;
 
 const App = () => (
   <div>
@@ -21,14 +21,20 @@ const App = () => (
   </div>
 );
 
-ReactDOM.render(<Frame style={styles}><App /></Frame>, document.querySelector('#example1'));
+ReactDOM.render(
+  <Frame style={styles}>
+    <App />
+  </Frame>,
+  document.querySelector('#example1')
+);
 
 const Foobar = () => (
-  <Frame style={styles} head={
-    <style>{'*{color:red}'}</style>
-  }>
+  <Frame style={styles} head={<style>{'*{color:red}'}</style>}>
     <h1>Frame example of wrapping component</h1>
-    <p>This is also showing encapuslated styles. All text is red inside this component.</p>
+    <p>
+      This is also showing encapuslated styles. All text is red inside this
+      component.
+    </p>
   </Frame>
 );
 

@@ -4,7 +4,7 @@ class App extends Component {
   render() {
     // console.log(this.state);
     return (
-      <div style={{width:"100vw",height:"100vh"}}>
+      <div style={{ width: '100vw', height: '100vh' }}>
         <HtmlEditor />
       </div>
     );

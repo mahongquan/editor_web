@@ -1,5 +1,15 @@
 import React from 'react';
+import AceEditor from 'react-ace';
+import 'brace/theme/tomorrow_night';
+import 'brace/mode/javascript';
+import 'brace/mode/jsx';
+import 'brace/mode/css';
+import 'brace/mode/markdown';
+import 'brace/mode/html';
+import 'brace/mode/python';
 import {
+  DropdownButton,
+  MenuItem,
   Button,
   Overlay,
   Navbar,
@@ -8,24 +18,10 @@ import {
   Tooltip,
   OverlayTrigger,
 } from 'react-bootstrap';
-var socket = require('./db');
-let styles = {
-  item: {
-    padding: '2px 2px',
-    cursor: 'default',
-  },
-
-  highlightedItem: {
-    color: 'white',
-    background: 'hsl(200, 50%, 50%)',
-    padding: '2px 2px',
-    cursor: 'default',
-  },
-
-  menu: {
-    border: 'solid 1px #ccc',
-  },
-};
+const fontSize = 16;
+var io = require('socket.io-client');
+var socket = io('http://localhost:8000');
+var ss = require('socket.io-stream');
 class File extends React.Component {
   glyphClass = () => {
     var className = 'glyphicon ';
@@ -38,7 +34,7 @@ class File extends React.Component {
     let style1;
     if (this.props.isdir) {
       console.log('isdir');
-      style1 = { backgroundColor: '#cc0' };
+      style1 = { backgroundColor: '#aa0' };
     } else {
       style1 = {};
     }
@@ -125,24 +121,7 @@ class File extends React.Component {
     return '' + (count | 0) + ' ' + File.sizes[iUnit].unit;
   };
 }
-class Browser extends React.Component {
-  channels_change = (event, value) => {
-    console.log('auto_change');
-    //this.setState({ yiqixinghao_value:value, auto_loading: false });
-    this.channels_select(null, value);
-  };
-  channels_input = event => {
-    console.log(event);
-    //this.setState({ yiqixinghao_value:value, auto_loading: false });
-    this.channels_select(null, event);
-  };
-  channels_select = (value, item) => {
-    console.log('selected');
-    this.setState({ channels: item });
-  };
-  matchStateToTerm = (state, value) => {
-    return state.toLowerCase().indexOf(value.toLowerCase()) !== -1;
-  };
+export default class Browser extends React.Component {
   state = {
     channels: '',
     isroot: true,
@@ -177,27 +156,23 @@ class Browser extends React.Component {
       this.setState({ isroot: false });
     }
     var self = this;
-    socket.emit('/fs/children', { path: path }, data => {
+    socket.emit('list', { path: path }, data => {
       var files = data.children.sort(self.state.sort);
       var paths = self.state.paths;
       if (paths[paths.length - 1] !== path) paths = paths.concat([path]);
-      self.setState(
-        {
-          files: files,
-          paths: paths,
-          sort: self.state.sort,
-          gridView: self.state.gridView,
-          showcontext: false,
-        },
-        () => {
-          self.updateNavbarPath(self.currentPath());
-        }
-      );
+      self.setState({
+        files: files,
+        paths: paths,
+        sort: self.state.sort,
+        gridView: self.state.gridView,
+        showcontext: false,
+      });
+      self.updateNavbarPath(self.currentPath());
     });
   };
   updateNavbarPath = path => {
-    // console.log("updateNavbarPath");
-    // console.log(path);
+    // var elem  = document.getElementById("pathSpan");
+    // elem.innerHTML = '<span class="glyphicon glyphicon-chevron-right"/>' +path;
     this.setState({ current_path: path });
   };
   reloadFilesFromServer = () => {
@@ -225,16 +200,16 @@ class Browser extends React.Component {
   };
 
   onParent = () => {
-    // console.log("onParent");
+    console.log('onParent');
     var thepath = this.currentPath();
     if (thepath === '.') {
-      alert('. 已经是根目录!');
+      alert('. 宸茬粡鏄¯鏍圭洰褰!');
     } else {
       var data = { path: thepath };
-      // console.log(data);
-      socket.emit('/fs/parent', data, res => {
+      console.log(data);
+      socket.emit('parent', data, res => {
         if (res.isroot) {
-          alert('已经是根目录!');
+          alert('is root!');
         } else {
           var parentPath = res.path;
           this.updatePath(parentPath);
@@ -270,14 +245,14 @@ class Browser extends React.Component {
     ss.createBlobReadStream(file).pipe(stream);
   };
   componentDidMount = () => {
-    // socket.on("connect_error",()=>{
-    //   this.setState({connect_error:true});
-    // })
-    // socket.on("connect",()=>{
-    //   this.setState({connect_error:false});
-    // })
-    // console.log("mount======");
-    // console.log(this.props.initpath);
+    socket.on('connect_error', () => {
+      this.setState({ connect_error: true });
+    });
+    socket.on('connect', () => {
+      this.setState({ connect_error: false });
+    });
+    console.log('mount======');
+    console.log(this.props.initpath);
     if (this.props.initpath) this.state.paths.push(this.props.initpath);
     var path = this.currentPath();
     this.loadFilesFromServer(path);
@@ -310,9 +285,48 @@ class Browser extends React.Component {
     this.loadFilesFromServer(path);
   };
   getContent = path => {
-    // console.log("content");
-    // console.log(path);
-    this.props.onFileClick(path);
+    console.log('content');
+    console.log(path);
+    socket.emit('content', { path: path }, data => {
+      //console.log(data);
+
+      //
+      var ext = path.split('.').pop();
+      let mode;
+      if (ext === 'js') {
+        mode = 'javascript';
+      } else if (ext === 'jsx') {
+        mode = 'jsx';
+      } else if (ext === 'py') {
+        mode = 'python';
+      } else if (ext === 'md') {
+        mode = 'markdown';
+      } else if (ext === 'html') {
+        mode = 'html';
+      } else if (ext === 'css') {
+        mode = 'css';
+      } else {
+        mode = 'text';
+      }
+      this.setState(
+        {
+          filecontent: data,
+          filechange: false,
+          showcontext: false,
+          openfilepath: path,
+          mode: mode,
+        },
+        () => {
+          setTimeout(
+            () => {
+              var undo = this.refs.editor.editor.getSession().getUndoManager(); //.markClean();
+              undo.reset();
+            },
+            1000 //wait 1000ms untill render finish
+          );
+        }
+      );
+    });
   };
   mkdir = () => {
     var newFolderName = prompt('Enter new folder name');
@@ -324,8 +338,8 @@ class Browser extends React.Component {
     );
   };
   onClick = f => {
-    // console.log("onClick");
-    // console.log(f);
+    console.log('onClick');
+    console.log(f);
     if (f.isdir) {
       this.updatePath(f.path);
     } else {
@@ -352,44 +366,44 @@ class Browser extends React.Component {
   };
   onChange = newValue => {
     //console.log('change',newValue);
+
     this.setState({
       filecontent: newValue,
       filechange: true,
     });
   };
   genpath = path => {
-    // console.log("genpath=============")
-    // console.log(path);
-    var paths = path.split('\\');
+    //console.log("genpath=============")
+    //console.log(path);
+    var paths = path.split('/');
     //if (paths.length==1) return null;
-    // console.log(paths);
+    //console.log(paths);
     var r = [];
     var i = 0;
     while (i < paths.length) {
       var s = '';
       for (var j = 0; j < i + 1; j++) {
         s += paths[j];
-        if (j < i) s += '\\';
+        if (j < i) s += '/';
       }
       //console.log(paths[i])
       //console.log(s)
       r.push([s, paths[i]]);
       i++;
     }
-    r.pop();
+    r.shift();
     // if(r.length===0){
     //     this.isroot=true;
     // }
     // else{
     //     this.isroot=false;
     // }
-    // console.log(r);
     var hs = r.map((item, idx) => {
       let style1;
       if (idx === this.state.pathIdx) {
-        style1 = { marginLeft: '6px', backgroundColor: '#ccc' };
+        style1 = { marginLeft: '6px', backgroundColor: '#00C' };
       } else {
-        style1 = { marginLeft: '6px', backgroundColor: '#cc0' };
+        style1 = { marginLeft: '6px' };
       }
       return (
         <span
@@ -464,8 +478,11 @@ class Browser extends React.Component {
   rootclick = () => {
     this.updatePath('.');
   };
+  loadeditor = editor => {
+    console.log(editor);
+  };
   render = () => {
-    // console.log(this.state.paths);
+    console.log(this.state.paths);
     const tooltipback = (
       <Tooltip id="tooltipback">
         <strong>back</strong>
@@ -487,7 +504,17 @@ class Browser extends React.Component {
     var listGlyph = 'glyphicon glyphicon-list';
     var className = this.state.gridView ? listGlyph : gridGlyph;
     var toolbar = (
-      <React.Fragment>
+      <div>
+        <div
+          align="center"
+          style={{
+            display: this.state.connect_error ? '' : 'none',
+            textAlign: 'center',
+            color: 'red',
+          }}
+        >
+          !!!!!!!!!!not connected!!!!!!!
+        </div>
         <Overlay
           target={this.state.target}
           container={this}
@@ -499,71 +526,184 @@ class Browser extends React.Component {
             <div onClick={this.onRemove}>remove</div>
           </Tooltip>
         </Overlay>
-        <div style={{ display: 'flex' }}>
-          <OverlayTrigger placement="bottom" overlay={tooltipback}>
-            <button>
-              <span
-                onClick={this.onBack}
-                className="glyphicon glyphicon-arrow-left"
-              />
-            </button>
-          </OverlayTrigger>
-          <OverlayTrigger placement="bottom" overlay={tooltipparent}>
-            <button>
-              <span
-                disabled={this.state.isroot}
-                onClick={this.onParent}
-                className="glyphicon glyphicon-arrow-up"
-              />
-            </button>
-          </OverlayTrigger>
-          <button>
-            <span
-              onClick={this.alternateView}
-              ref="altViewSpan"
-              className={className}
-            />
-          </button>
-          <button>
-            <span
-              onClick={this.rootclick}
-              className="glyphicon glyphicon-chevron-right"
-            />
-          </button>
-          {pathshow}
-        </div>
+        <Navbar inverse collapseOnSelect>
+          <Navbar.Header>
+            <Navbar.Brand>Code Explore</Navbar.Brand>
+            <Navbar.Toggle />
+          </Navbar.Header>
+          <Navbar.Collapse>
+            <Nav>
+              <NavItem eventKey={1} href="#">
+                <OverlayTrigger placement="bottom" overlay={tooltipback}>
+                  <span
+                    onClick={this.onBack}
+                    className="glyphicon glyphicon-arrow-left"
+                  />
+                </OverlayTrigger>
+              </NavItem>
+              <NavItem disabled={this.state.isroot} eventKey={2} href="#">
+                <OverlayTrigger placement="bottom" overlay={tooltipparent}>
+                  <span
+                    onClick={this.onParent}
+                    className="glyphicon glyphicon-arrow-up"
+                  />
+                </OverlayTrigger>
+              </NavItem>
+              <NavItem eventKey={4} href="#">
+                <span onClick={this.mkdir}>
+                  <i
+                    style={{ fontSize: 8, verticalAlign: 'top' }}
+                    className="glyphicon glyphicon-plus"
+                  />
+                  <span className="glyphicon glyphicon-folder-open" />
+                </span>
+              </NavItem>
+              <NavItem eventKey={3} href="#">
+                <OverlayTrigger placement="bottom" overlay={tooltipupload}>
+                  <span
+                    onClick={this.onUpload}
+                    className="glyphicon glyphicon-upload"
+                  />
+                </OverlayTrigger>
+              </NavItem>
+              <NavItem eventKey={5} href="#">
+                <span
+                  onClick={this.alternateView}
+                  ref="altViewSpan"
+                  className={className}
+                />
+              </NavItem>
+              <NavItem eventKey={6} href="#">
+                <span
+                  onClick={this.rootclick}
+                  className="glyphicon glyphicon-chevron-right"
+                />
+                {pathshow}
+              </NavItem>
+            </Nav>
+          </Navbar.Collapse>
+        </Navbar>
         <input
           type="file"
           id="uploadInput"
           onChange={this.uploadFile}
           style={{ display: this.state.displayUpload }}
         />
-      </React.Fragment>
+      </div>
+    );
+    const ace = (
+      <div>
+        {this.state.openfilepath}
+        <Button
+          disabled={!this.state.filechange}
+          onClick={this.savefilecontent}
+        >
+          save
+        </Button>
+        <DropdownButton title={this.state.mode} id="id_dropdown3">
+          <MenuItem onSelect={() => this.setState({ mode: 'text' })}>
+            text
+          </MenuItem>
+          <MenuItem onSelect={() => this.setState({ mode: 'jsx' })}>
+            jsx
+          </MenuItem>
+          <MenuItem onSelect={() => this.setState({ mode: 'python' })}>
+            python
+          </MenuItem>
+          <MenuItem onSelect={() => this.setState({ mode: 'javascript' })}>
+            javascript
+          </MenuItem>
+        </DropdownButton>
+        <Button
+          disabled={!this.state.filechange}
+          onClick={() => {
+            this.refs.editor.editor.undo();
+          }}
+        >
+          <span
+            style={{
+              transform: 'scaleX(-1)',
+              filter: 'FlipH',
+            }}
+            className="glyphicon glyphicon-share-alt"
+          />
+        </Button>
+        <Button
+          disabled={!this.state.filechange}
+          onClick={() => {
+            this.refs.editor.editor.redo();
+          }}
+        >
+          <span className="glyphicon glyphicon-share-alt" />
+        </Button>
+        <Button
+          onClick={() => {
+            console.log(this.refs.editor);
+
+            //this.refs.editor.editor.showSettingsMenu();
+          }}
+        >
+          settings
+        </Button>
+        <Button
+          onClick={() => {
+            var undo = this.refs.editor.editor.getSession().getUndoManager(); //.markClean();
+            undo.reset();
+          }}
+        >
+          reset undo
+        </Button>
+        <Button
+          onClick={() => {
+            var undo = this.refs.editor.editor.getSession().getUndoManager(); //.markClean();
+            console.log(undo);
+          }}
+        >
+          show undo
+        </Button>
+        <AceEditor
+          ref="editor"
+          style={{
+            margin: 'auto',
+            width: '100%',
+          }}
+          theme="tomorrow_night"
+          fontSize={fontSize}
+          showPrintMargin={false}
+          wrapEnabled={true}
+          mode={this.state.mode}
+          value={this.state.filecontent}
+          onChange={this.onChange}
+          onLoad={this.loadeditor}
+          name="UNIQUE_ID_OF_DIV"
+          editorProps={{ $blockScrolling: true }}
+        />
+      </div>
     );
     let dircontent;
     if (this.state.gridView) {
       dircontent = <div style={{ display: 'inline' }}>{files}</div>;
     } else {
       dircontent = (
-        <table>
+        <table className="table table-responsive table-striped table-hover">
           <thead>
             <tr>
               <th>
-                <button onClick={this.pathSort}>
+                <button onClick={this.pathSort} className="btn btn-default">
                   <span className="glyphicon glyphicon-sort" />
-                  名称
+                  name
                 </button>
               </th>
               <th>
-                <button onClick={this.sizeSort}>
+                <button onClick={this.sizeSort} className="btn btn-default">
                   <span className="glyphicon glyphicon-sort" />
-                  大小
+                  size
                 </button>
               </th>
               <th>
-                <button onClick={this.timeSort}>
+                <button onClick={this.timeSort} className="btn btn-default">
                   <span className="glyphicon glyphicon-sort" />
-                  修改日期
+                  time
                 </button>
               </th>
             </tr>
@@ -573,19 +713,20 @@ class Browser extends React.Component {
       );
     }
     return (
-      <div
-        style={{
-          width: '180px',
-          backgroundColor: '#888',
-          maxHeight: '100%',
-          overflow: 'auto',
-        }}
-      >
-        {toolbar}
-        {dircontent}
+      <div style={{ width: '100vw', height: '100vh' }}>
+        <div
+          style={{
+            width: '100%',
+            backgroundColor: '#888',
+            maxHeight: '300px',
+            overflow: 'scroll',
+          }}
+        >
+          {toolbar}
+          {dircontent}
+        </div>
+        {ace}
       </div>
     );
   };
 }
-
-export default Browser;
