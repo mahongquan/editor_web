@@ -1,19 +1,15 @@
 {
-  "name": "htmleditor",
+  "name": "editor_web",
   "version": "0.0.1",
   "homepage": ".",
-  "description": "html editor",
+  "description": "editor_web",
   "main": "main.js",
   "scripts": {
-    "start": "electron . --dev",
-    "local": "electron . --local",
-    "electron": "electron . ",
     "dev": "react-scripts start",
     "build": "react-scripts build"
   },
-  "repository": "https://github.com/electron/electron-quick-start",
+  "repository": "https://github.com/mahongquan/editor_web",
   "keywords": [
-    "Electron",
     "quick",
     "start",
     "tutorial",
@@ -23,16 +19,15 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "brace": "^0.11.1",
-    "prettier": "1.12.1",
-    "react": "^16.3.2",
-    "react-ace": "^5.10.0",
-    "react-dom": "^16.3.2",
+    "prettier": "1.15.2",
+    "react": "^16.6.3",
+    "react-ace": "^6.2.0",
+    "react-dom": "^16.6.3",
     "react-scripts": "^2.1.1"
   },
   "dependencies": {
     "bootstrap": "3.3.7",
     "react-bootstrap": "^0.32.4",
-    "react-split-pane": "^0.1.77",
     "socket.io": "^2.1.1",
     "socket.io-client": "^2.1.1",
     "socket.io-stream": "^0.9.1"
