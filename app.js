@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 var exec = require('child_process').exec;
-var static = require('./node-static');
-var fileServer = new static.Server('./public');
+var node_static = require('./node-static');
+var fileServer = new node_static.Server('./public');
 var debug = require('debug')('express-example');
 var ss = require('socket.io-stream');
 var path = require('path');

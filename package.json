@@ -1,5 +1,5 @@
 {
-  "name": "htmleditor",
+  "name": "editor_web",
   "version": "0.0.1",
   "homepage": ".",
   "description": "html editor",
@@ -23,14 +23,11 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "brace": "^0.11.1",
-    "electron": "~1.8.4",
-    "prettier": "1.12.1",
-    "react": "^16.3.2",
-    "react-ace": "^5.10.0",
-    "react-dom": "^16.3.2",
-    "react-scripts": "^1.1.4"
-  },
-  "dependencies": {
-    "react-split-pane": "^0.1.77"
+    "electron": "~3.0.10",
+    "prettier": "1.15.2",
+    "react": "^16.6.3",
+    "react-ace": "^6.2.0",
+    "react-dom": "^16.6.3",
+    "react-scripts": "^2.1.1"
   }
 }

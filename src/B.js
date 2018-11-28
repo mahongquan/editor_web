@@ -592,7 +592,7 @@ export default class Browser extends React.Component {
       </div>
     );
     const ace = (
-      <div>
+      <div style={{width:"100%",height:"100%"}}>
         {this.state.openfilepath}
         <Button
           disabled={!this.state.filechange}
@@ -601,6 +601,12 @@ export default class Browser extends React.Component {
           save
         </Button>
         <DropdownButton title={this.state.mode} id="id_dropdown3">
+          <MenuItem onSelect={() => this.setState({ mode: 'htm' })}>
+            html
+          </MenuItem>
+          <MenuItem onSelect={() => this.setState({ mode: 'markdown' })}>
+            markdown
+          </MenuItem>
           <MenuItem onSelect={() => this.setState({ mode: 'text' })}>
             text
           </MenuItem>
@@ -665,7 +671,8 @@ export default class Browser extends React.Component {
           ref="editor"
           style={{
             margin: 'auto',
-            width: '100%',
+                width: '100%',
+                height: '100%',
           }}
           theme="tomorrow_night"
           fontSize={fontSize}
