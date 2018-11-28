@@ -41,13 +41,13 @@ class File extends React.Component {
     return (
       <tr id={this.props.id} ref={this.props.path}>
         <td>
-          <a
+          <span
             style={style1}
             onContextMenu={this.props.handleContextMenu}
             onClick={this.props.onClick}
           >
             {this.props.name}
-          </a>
+          </span>
         </td>
         <td>{File.sizeString(this.props.size, this.props.isdir)}</td>
         <td>{dateString}</td>
@@ -72,13 +72,13 @@ class File extends React.Component {
       };
     }
     return (
-      <a
+      <span
         style={style1}
         onContextMenu={this.props.handleContextMenu}
         onClick={this.props.onClick}
       >
         {this.props.name}
-      </a>
+      </span>
     );
   };
 
@@ -203,7 +203,7 @@ export default class Browser extends React.Component {
     console.log('onParent');
     var thepath = this.currentPath();
     if (thepath === '.') {
-      alert('. 宸茬粡鏄¯鏍圭洰褰!');
+      alert('is root!');
     } else {
       var data = { path: thepath };
       console.log(data);
@@ -294,7 +294,7 @@ export default class Browser extends React.Component {
       var ext = path.split('.').pop();
       let mode;
       if (ext === 'js') {
-        mode = 'javascript';
+        mode = 'jsx';
       } else if (ext === 'jsx') {
         mode = 'jsx';
       } else if (ext === 'py') {
@@ -601,11 +601,11 @@ export default class Browser extends React.Component {
           save
         </Button>
         <DropdownButton title={this.state.mode} id="id_dropdown3">
-          <MenuItem onSelect={() => this.setState({ mode: 'htm' })}>
-            html
-          </MenuItem>
           <MenuItem onSelect={() => this.setState({ mode: 'markdown' })}>
             markdown
+          </MenuItem>
+          <MenuItem onSelect={() => this.setState({ mode: 'html' })}>
+            html
           </MenuItem>
           <MenuItem onSelect={() => this.setState({ mode: 'text' })}>
             text
@@ -671,8 +671,8 @@ export default class Browser extends React.Component {
           ref="editor"
           style={{
             margin: 'auto',
-                width: '100%',
-                height: '100%',
+            width: '100%',
+            height:"100%",
           }}
           theme="tomorrow_night"
           fontSize={fontSize}
